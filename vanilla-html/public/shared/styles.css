@@ -1,0 +1,381 @@
+/*
+ * Shared styles for the XPay vanilla examples. Light/dark theme via the
+ * `[data-theme]` attribute on <html>. The theme picker in each page's
+ * header writes to localStorage and toggles this attribute so all pages
+ * stay in sync.
+ *
+ * Each page also wires the same value into the XPay SDK via
+ * `checkout.changeAppearance({ colorMode })` so the payment UI follows
+ * the host page's theme.
+ */
+
+:root {
+  --bg: #fafafa;
+  --surface: #fff;
+  --border: #e5e5e5;
+  --fg: #111;
+  --fg-muted: #555;
+  --fg-subtle: #888;
+  --accent: #635bff;
+  --accent-fg: #fff;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] {
+  --bg: #0c0c0d;
+  --surface: #161618;
+  --border: #2a2a2e;
+  --fg: #f5f5f5;
+  --fg-muted: #aaa;
+  --fg-subtle: #888;
+  --accent: #7c75ff;
+  --accent-fg: #fff;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+* { box-sizing: border-box; }
+
+/* The HTML `hidden` attribute should always win. Without this, any element
+ * we hide via `el.hidden = true` would stay visible if its CSS sets a
+ * non-default `display:` (e.g. `display: flex`). This bites the promo
+ * pill on elements.html — the surrounding container is `display: flex`. */
+[hidden] { display: none !important; }
+
+body {
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100vh;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+header.site {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+header.site .inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+header.site .brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+header.site .brand a {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--fg);
+  text-decoration: none;
+}
+
+header.site .brand .tag {
+  font-size: 12px;
+  color: var(--fg-subtle);
+}
+
+header.site nav {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+header.site nav a {
+  font-size: 13px;
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+
+header.site nav a:hover,
+header.site nav a[aria-current="page"] {
+  color: var(--fg);
+}
+
+.theme-picker {
+  font: inherit;
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin: 0 0 0.25rem;
+}
+
+p.lead {
+  color: var(--fg-muted);
+  margin: 0 0 1.5rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.card .price {
+  color: var(--fg-muted);
+  margin: 0 0 1rem;
+  font-size: 14px;
+}
+
+button {
+  font: inherit;
+  background: var(--accent);
+  color: var(--accent-fg);
+  border: 0;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+button:hover {
+  filter: brightness(1.05);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.ghost {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"] {
+  font: inherit;
+  width: 100%;
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-muted);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.required-marker {
+  color: #d4183d;
+  margin-left: 2px;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.error {
+  color: #d4183d;
+  font-size: 13px;
+  margin: 0.5rem 0 0;
+}
+
+.muted {
+  color: var(--fg-subtle);
+  font-size: 13px;
+}
+
+.test-card-hint {
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 13px;
+  color: var(--fg-muted);
+  margin-bottom: 1.5rem;
+}
+
+.test-card-hint code {
+  background: var(--bg);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+footer.site {
+  margin-top: 4rem;
+  padding: 2rem 1.5rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 13px;
+  color: var(--fg-subtle);
+}
+
+footer.site a {
+  color: var(--fg-muted);
+}
+
+/* Where the SDK mounts its iframes. Min-heights avoid layout jumps. */
+#payment-element,
+#card-element,
+#checkout-container {
+  min-height: 280px;
+}
+
+/* ── Order summary (elements.html) ──────────────────────────────────── */
+
+.line-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.line-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.line-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.line-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.line-item-name {
+  font-weight: 500;
+}
+
+.line-item-qty {
+  margin-top: 2px;
+}
+
+.line-item-total {
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.summary {
+  border-top: 1px solid var(--border);
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-row .label {
+  color: var(--fg-muted);
+}
+
+.summary-row.discount .value {
+  color: #16a34a;
+}
+
+[data-theme="dark"] .summary-row.discount .value {
+  color: #34d399;
+}
+
+.summary-row.total {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--fg);
+}
+
+/* ── Promo code input ───────────────────────────────────────────────── */
+
+.promo-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.promo-applied {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.badge {
+  display: inline-block;
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="dark"] .badge {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+button.ghost-sm {
+  font: inherit;
+  font-size: 12px;
+  background: transparent;
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button.ghost-sm:hover {
+  color: var(--fg);
+  background: var(--bg);
+}

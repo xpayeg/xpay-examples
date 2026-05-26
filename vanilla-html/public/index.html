@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>XPay Vanilla Examples</title>
+    <link rel="stylesheet" href="/shared/styles.css" />
+  </head>
+  <body>
+    <header class="site">
+      <div class="inner">
+        <div class="brand">
+          <a href="/">XPay Vanilla Examples</a>
+          <span class="tag">no framework</span>
+        </div>
+        <nav>
+          <a href="https://docs.xpay.app" target="_blank" rel="noreferrer">Docs</a>
+          <select class="theme-picker" id="theme-picker" aria-label="Theme">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <h1>Pick an integration pattern</h1>
+      <p class="lead">
+        Every example below is a single HTML file calling the same XPay JavaScript SDK.
+        Open the source for any page to see exactly what's happening.
+      </p>
+
+      <a href="/drop-in-modal.html" class="card" style="text-decoration:none; color:inherit; display:block">
+        <h3>Drop-in — modal <span class="muted" style="font-weight:400; margin-left:0.5rem">recommended starter</span></h3>
+        <p class="muted" style="margin:0 0 0.5rem">
+          One <code>xpay.checkout({ mode: "modal" })</code> call opens the full payment UI in an overlay.
+          Card form, 3D Secure, local methods — all inside the iframe.
+        </p>
+        <span class="muted">Use when: you want zero UI work and a "Pay" button.</span>
+      </a>
+
+      <a href="/drop-in-inline.html" class="card" style="text-decoration:none; color:inherit; display:block">
+        <h3>Drop-in — inline</h3>
+        <p class="muted" style="margin:0 0 0.5rem">
+          Same SDK, mounted in a container instead of an overlay. The iframe auto-sizes
+          to its content.
+        </p>
+        <span class="muted">Use when: the form should sit inside the page, not float over it.</span>
+      </a>
+
+      <a href="/elements.html" class="card" style="text-decoration:none; color:inherit; display:block">
+        <h3>Elements — PaymentElement <span class="muted" style="font-weight:400; margin-left:0.5rem">custom UI</span></h3>
+        <p class="muted" style="margin:0 0 0.5rem">
+          Build your own form. Our <code>&lt;PaymentElement&gt;</code> handles the payment method picker
+          and the secure card fields. Call <code>checkout.confirm()</code> with customer details
+          you collected yourself.
+        </p>
+        <span class="muted">Use when: you want full control over layout and styling.</span>
+      </a>
+
+      <a href="/hosted-redirect.html" class="card" style="text-decoration:none; color:inherit; display:block">
+        <h3>Hosted Checkout — full redirect</h3>
+        <p class="muted" style="margin:0 0 0.5rem">
+          Send the customer to <code>checkout.xpay.app</code> for the entire payment, then redirect back.
+          No SDK on your page at all.
+        </p>
+        <span class="muted">Use when: backend-only integration, no JS required.</span>
+      </a>
+
+      <p class="muted" style="margin-top:2rem">
+        Test card: <code>5123 4500 0000 0008</code>, expiry <code>01/39</code>, <code>100</code>.
+        Full list at <a href="https://docs.xpay.app/get-started/test-mode" target="_blank" rel="noreferrer">docs.xpay.app/get-started/test-mode</a>.
+      </p>
+    </main>
+
+    <footer class="site">
+      Source: <a href="https://github.com/xpayeg/xpay-examples" target="_blank" rel="noreferrer">github.com/xpayeg/xpay-examples</a>
+    </footer>
+
+    <script type="module">
+      import { mountThemePicker } from "/shared/theme.js";
+      mountThemePicker("#theme-picker");
+    </script>
+  </body>
+</html>

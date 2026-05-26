@@ -1,0 +1,17 @@
+node_modules/
+.next/
+.cache/
+.turbo/
+# Local env files — keep .env.example / .env.local.example tracked, ignore everything else
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+# Build/runtime
+*.log
+.DS_Store
+# Vercel
+.vercel
+# TS
+*.tsbuildinfo

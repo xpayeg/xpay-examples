@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Order complete · XPay Vanilla Examples</title>
+    <link rel="stylesheet" href="/shared/styles.css" />
+  </head>
+  <body>
+    <header class="site">
+      <div class="inner">
+        <div class="brand">
+          <a href="/">XPay Vanilla Examples</a>
+          <span class="tag">success</span>
+        </div>
+        <nav>
+          <a href="/">All patterns</a>
+          <select class="theme-picker" id="theme-picker" aria-label="Theme">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <h1 id="title">Loading…</h1>
+      <p class="lead" id="subtitle"></p>
+
+      <div class="card" id="receipt" hidden>
+        <h3>Receipt</h3>
+        <dl id="receipt-fields" style="display:grid; grid-template-columns:auto 1fr; gap:0.5rem 1rem; margin:0;"></dl>
+      </div>
+
+      <p class="muted" style="margin-top:1.5rem">
+        This page fetches the Checkout Session from the server (using the secret key) — never
+        trust the SDK callback alone for fulfillment. The authoritative trigger is the
+        <code>checkout.session.completed</code> webhook.
+      </p>
+
+      <p style="margin-top:1.5rem">
+        <a href="/">← Back to all patterns</a>
+      </p>
+    </main>
+
+    <footer class="site">
+      Source: <a href="https://github.com/xpayeg/xpay-examples/blob/main/vanilla-html/public/success.html" target="_blank" rel="noreferrer">success.html</a>
+    </footer>
+
+    <script type="module">
+      import { mountThemePicker } from "/shared/theme.js";
+      mountThemePicker("#theme-picker");
+
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get("session_id");
+
+      const titleEl = document.getElementById("title");
+      const subtitleEl = document.getElementById("subtitle");
+      const receiptEl = document.getElementById("receipt");
+      const fieldsEl = document.getElementById("receipt-fields");
+
+      if (!sessionId) {
+        titleEl.textContent = "Missing session_id";
+        subtitleEl.textContent = "Open this page from a completed checkout to see the receipt.";
+      } else {
+        // Server uses the secret key to retrieve the session. The browser
+        // never sees the secret key — only the public, post-payment view
+        // of this session.
+        fetch(`/api/session/${sessionId}`)
+          .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Lookup failed"))))
+          .then((session) => {
+            const paid = session.paymentStatus === "paid";
+            titleEl.textContent = paid ? "Payment complete" : "Payment pending";
+            subtitleEl.textContent = paid
+              ? "Thanks — your order has been confirmed."
+              : "We're still finalizing this payment. The webhook will be the source of truth.";
+
+            const row = (label, value) => {
+              const dt = document.createElement("dt");
+              dt.style.color = "var(--fg-muted)";
+              dt.textContent = label;
+              const dd = document.createElement("dd");
+              dd.style.margin = "0";
+              dd.textContent = value;
+              fieldsEl.appendChild(dt);
+              fieldsEl.appendChild(dd);
+            };
+
+            row("Session ID", session.id);
+            row("Status", session.status);
+            row("Payment status", session.paymentStatus);
+            row("Total", `${session.currency} ${(session.amountTotal / 100).toFixed(2)}`);
+            if (session.customer?.email) row("Email", session.customer.email);
+
+            receiptEl.hidden = false;
+          })
+          .catch((err) => {
+            console.error(err);
+            titleEl.textContent = "Couldn't load order";
+            subtitleEl.textContent = err.message;
+          });
+      }
+    </script>
+  </body>
+</html>

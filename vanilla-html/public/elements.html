@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Elements (PaymentElement) · XPay Vanilla Examples</title>
+    <link rel="stylesheet" href="/shared/styles.css" />
+    <script src="https://checkout.xpay.app/v1/sdk.js" async></script>
+  </head>
+  <body>
+    <header class="site">
+      <div class="inner">
+        <div class="brand">
+          <a href="/">XPay Vanilla Examples</a>
+          <span class="tag">elements · custom UI</span>
+        </div>
+        <nav>
+          <a href="/">All patterns</a>
+          <a href="https://docs.xpay.app/integrate/integration-patterns/elements" target="_blank" rel="noreferrer">Docs</a>
+          <select class="theme-picker" id="theme-picker" aria-label="Theme">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <h1>Elements — PaymentElement</h1>
+      <p class="lead">
+        Build the form yourself. The <code>&lt;PaymentElement&gt;</code> handles the payment-method picker
+        and secure card fields; everything else — your form, your styling, your summary — is yours.
+      </p>
+
+      <div class="test-card-hint">
+        <strong>Test card:</strong> <code>5123 4500 0000 0008</code> &nbsp;·&nbsp; <code>01/39</code> &nbsp;·&nbsp; <code>100</code>
+      </div>
+
+      <!-- Order summary card. Every field reads from `session.lineItems` /
+           `session.totalDetails` / `session.discounts`. The `change` event
+           fires on every server-side mutation (promo applied, quantity
+           updated, fee recalculated) — we re-render the whole block. -->
+      <section class="card" aria-label="Order summary">
+        <h3 style="margin-bottom: 0.5rem">Order summary</h3>
+        <div id="line-items" class="line-items">
+          <div class="muted">Loading…</div>
+        </div>
+        <div id="summary" class="summary" hidden></div>
+      </section>
+
+      <form id="checkout-form" class="card" novalidate>
+        <h3 style="margin-bottom: 0.5rem">Your details</h3>
+
+        <div class="field">
+          <label for="email">Email <span class="required-marker" aria-hidden="true">*</span></label>
+          <input id="email" type="email" required autocomplete="email" />
+        </div>
+
+        <div class="field">
+          <label for="name">Name <span class="required-marker" aria-hidden="true">*</span></label>
+          <input id="name" type="text" required autocomplete="name" />
+        </div>
+
+        <div class="field">
+          <label for="phone">Phone <span class="muted" style="font-weight:400">(optional)</span></label>
+          <input id="phone" type="tel" autocomplete="tel" />
+        </div>
+
+        <!-- Promo code with badge + remove button driven by session.discounts. -->
+        <div class="field">
+          <label for="promo">Promo code (optional)</label>
+          <div class="promo-row">
+            <input id="promo" type="text" placeholder="Enter code" autocomplete="off" />
+            <button id="promo-apply" type="button" class="ghost">Apply</button>
+          </div>
+          <div id="promo-applied" class="promo-applied" hidden>
+            <span class="badge" id="promo-badge"></span>
+            <button id="promo-remove" type="button" class="ghost-sm">Remove</button>
+          </div>
+          <p class="error" id="promo-error"></p>
+        </div>
+
+        <div class="field">
+          <label>Payment</label>
+          <div id="payment-element"></div>
+        </div>
+
+        <button id="pay-button" type="submit" disabled>Pay</button>
+        <p class="error" id="error"></p>
+      </form>
+    </main>
+
+    <footer class="site">
+      Source: <a href="https://github.com/xpayeg/xpay-examples/blob/main/vanilla-html/public/elements.html" target="_blank" rel="noreferrer">elements.html</a>
+    </footer>
+
+    <script type="module">
+      import { mountThemePicker, getColorMode } from "/shared/theme.js";
+      import { PUBLISHABLE_KEY } from "/config.js";
+      mountThemePicker("#theme-picker");
+
+      // ── DOM refs ───────────────────────────────────────────────────────
+      const checkoutForm = document.getElementById("checkout-form");
+      const lineItemsEl = document.getElementById("line-items");
+      const summaryEl = document.getElementById("summary");
+      const promoInput = document.getElementById("promo");
+      const promoApplyBtn = document.getElementById("promo-apply");
+      const promoRemoveBtn = document.getElementById("promo-remove");
+      const promoAppliedEl = document.getElementById("promo-applied");
+      const promoBadgeEl = document.getElementById("promo-badge");
+      const promoErrorEl = document.getElementById("promo-error");
+      const payButton = document.getElementById("pay-button");
+      const errorEl = document.getElementById("error");
+
+      // ── Helpers ────────────────────────────────────────────────────────
+      const fmt = (currency, minor) =>
+        `${currency} ${(Number(minor) / 100).toFixed(2)}`;
+
+      const whenSdkReady = () =>
+        new Promise((resolve) => {
+          if (window.XPay) return resolve();
+          const i = setInterval(() => {
+            if (window.XPay) { clearInterval(i); resolve(); }
+          }, 50);
+        });
+
+      // ── Render the order summary from the session ─────────────────────
+      //
+      // Everything that can change after `initCheckout` lands in here.
+      // We DO NOT hardcode amounts — the server is the source of truth.
+      // Mirrors what the hosted checkout's PriceSummary does, using
+      // `session.totalDetails` for all breakdown lines.
+      function renderSession(session) {
+        // Line items: name + quantity + line total
+        const items = session.lineItems ?? [];
+        if (items.length === 0) {
+          lineItemsEl.innerHTML = `<div class="muted">No items</div>`;
+        } else {
+          lineItemsEl.innerHTML = items
+            .map((item) => {
+              const name = item.price?.product?.name ?? "Item";
+              const qty = item.quantity ?? 1;
+              const lineTotal = item.amountTotal ?? "0";
+              return `
+                <div class="line-item">
+                  <div class="line-item-info">
+                    <div class="line-item-name">${name}</div>
+                    <div class="muted line-item-qty">Qty ${qty}</div>
+                  </div>
+                  <div class="line-item-total">${fmt(session.currency, lineTotal)}</div>
+                </div>
+              `;
+            })
+            .join("");
+        }
+
+        // Summary breakdown — only show rows that exist on this session.
+        const td = session.totalDetails ?? {};
+        const rows = [];
+        if (session.amountSubtotal != null) {
+          rows.push(["Subtotal", fmt(session.currency, session.amountSubtotal)]);
+        }
+        if (Number(td.amountDiscount) > 0) {
+          rows.push([
+            "Discount",
+            `-${fmt(session.currency, td.amountDiscount)}`,
+            "discount",
+          ]);
+        }
+        if (Number(td.amountShipping) > 0) {
+          rows.push(["Shipping", fmt(session.currency, td.amountShipping)]);
+        }
+        if (Number(td.amountTax) > 0) {
+          rows.push(["Tax", fmt(session.currency, td.amountTax)]);
+        }
+        if (Number(td.amountCollectedVat) > 0) {
+          rows.push(["VAT", fmt(session.currency, td.amountCollectedVat)]);
+        }
+        if (Number(td.amountPlatformFee) > 0) {
+          rows.push([
+            "Processing fee",
+            fmt(session.currency, td.amountPlatformFee),
+          ]);
+        }
+
+        summaryEl.hidden = false;
+        summaryEl.innerHTML =
+          rows
+            .map(
+              ([label, value, cls]) => `
+                <div class="summary-row${cls ? " " + cls : ""}">
+                  <span class="label">${label}</span>
+                  <span class="value">${value}</span>
+                </div>
+              `,
+            )
+            .join("") +
+          `<div class="summary-row total">
+            <span>Total</span>
+            <span>${fmt(session.currency, session.amountTotal)}</span>
+          </div>`;
+
+        // Pay button label tracks the live total.
+        payButton.textContent = `Pay ${fmt(session.currency, session.amountTotal)}`;
+
+        // Promo state — driven by session.discounts.
+        renderPromoState(session);
+      }
+
+      function renderPromoState(session) {
+        const discounts = session.discounts ?? [];
+        if (discounts.length === 0) {
+          promoAppliedEl.hidden = true;
+          promoBadgeEl.textContent = "";
+          promoInput.disabled = false;
+          promoApplyBtn.disabled = false;
+          return;
+        }
+        // Show the applied promo with a clear badge + remove button.
+        const d = discounts[0];
+        const code = d.promotionCodeCode ?? d.coupon?.name ?? "Promo";
+        promoBadgeEl.textContent = code;
+        promoAppliedEl.hidden = false;
+        promoInput.value = code;
+        // While a promo is applied, lock the input so it's clear the user
+        // must "Remove" before applying a different code.
+        promoInput.disabled = true;
+        promoApplyBtn.disabled = true;
+      }
+
+      // ── Boot ──────────────────────────────────────────────────────────
+      let checkout; // InitCheckoutResult — session fields + action methods
+      let paymentReady = false;
+
+      /** Single source of truth for whether the pay button should be enabled. */
+      function updatePayButtonState() {
+        if (!checkout) return;
+        // checkValidity() returns true only when every `required` field in
+        // the form is filled and valid (the form has `novalidate` so the
+        // browser doesn't auto-error on submit — we use the API here to
+        // drive the button instead of the submit-time popup).
+        const formValid = checkoutForm.checkValidity();
+        payButton.disabled =
+          !formValid || !paymentReady || !checkout.canConfirm;
+      }
+
+      async function start() {
+        await whenSdkReady();
+
+        // 1. Server creates a Checkout Session in `custom` uiMode.
+        const res = await fetch("/api/create-checkout", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ productId: "premium", uiMode: "custom" }),
+        });
+        if (!res.ok) {
+          errorEl.textContent = "Failed to start checkout.";
+          return;
+        }
+        const { clientSecret } = await res.json();
+
+        // 2. initCheckout — modern entry point. Returns session data
+        //    merged with action methods (confirm, applyPromotionCode, etc).
+        const xpay = XPay(PUBLISHABLE_KEY);
+        checkout = await xpay.initCheckout({
+          clientSecret,
+          appearance: { colorMode: getColorMode() },
+        });
+
+        // 3. Handle terminal session states before mounting anything.
+        if (checkout.status.type === "expired") {
+          errorEl.textContent = "This checkout session has expired.";
+          return;
+        }
+        if (checkout.status.type === "complete") {
+          errorEl.textContent = "This session has already been paid.";
+          return;
+        }
+
+        // 4. Mount the payment element.
+        const elements = checkout.getElements();
+        const paymentElement = elements.create("payment");
+        paymentElement.mount("#payment-element");
+
+        // 5. Render the order summary from the initial session, then
+        //    re-render on every change event (promo, qty, fee recalc).
+        renderSession(checkout);
+        checkout.on("change", (session) => renderSession(session));
+
+        // 6. Track payment-element completeness to gate the pay button.
+        //    The pay button is enabled only when ALL of these are true:
+        //      - Required form fields are filled & valid (HTML validity)
+        //      - The payment element reports complete (card fields done /
+        //        non-card method selected)
+        //      - The session itself accepts confirmation (`canConfirm`)
+        paymentElement.on("change", (event) => {
+          paymentReady = event.complete;
+          updatePayButtonState();
+        });
+
+        // Re-evaluate as the customer types into the contact fields. The
+        // form's promo input is also a form field, but its empty state
+        // doesn't affect submission — guard against false-positive
+        // disable by excluding it from the required validity check below.
+        checkoutForm.addEventListener("input", updatePayButtonState);
+
+        // 7. Runtime theme sync.
+        window.addEventListener("themechange", (e) => {
+          checkout.changeAppearance({ colorMode: e.detail.colorMode });
+        });
+      }
+
+      // ── Promo apply / remove ──────────────────────────────────────────
+      //
+      // Both return Promise<ActionResult>. On success the server updates
+      // the session and the SDK fires `change` — our renderSession() handler
+      // picks it up and reflects everything (discount line, badge, total).
+
+      async function applyPromo() {
+        if (!checkout) return;
+        const code = promoInput.value.trim();
+        if (!code) return;
+
+        promoErrorEl.textContent = "";
+        promoApplyBtn.disabled = true;
+        promoApplyBtn.textContent = "Applying…";
+
+        const result = await checkout.applyPromotionCode(code);
+
+        promoApplyBtn.textContent = "Apply";
+        if (result.type === "error") {
+          promoErrorEl.textContent = result.error.message;
+          promoApplyBtn.disabled = false;
+        }
+        // On success: change event fires → renderSession swaps to applied UI.
+      }
+
+      async function removePromo() {
+        if (!checkout) return;
+        promoErrorEl.textContent = "";
+        promoRemoveBtn.disabled = true;
+        promoRemoveBtn.textContent = "Removing…";
+
+        const result = await checkout.removePromotionCode();
+
+        promoRemoveBtn.textContent = "Remove";
+        promoRemoveBtn.disabled = false;
+        if (result.type === "error") {
+          promoErrorEl.textContent = result.error.message;
+        }
+        // Clear the input on successful remove so the user can type a new code.
+        if (result.type === "success") {
+          promoInput.value = "";
+        }
+      }
+
+      promoApplyBtn.addEventListener("click", applyPromo);
+      promoRemoveBtn.addEventListener("click", removePromo);
+      promoInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); applyPromo(); }
+      });
+
+      // ── Pay button ────────────────────────────────────────────────────
+      document.getElementById("checkout-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!checkout || !paymentReady) return;
+
+        errorEl.textContent = "";
+        payButton.disabled = true;
+        const original = payButton.textContent;
+        payButton.textContent = "Processing…";
+
+        const result = await checkout.confirm({
+          customerDetails: {
+            email: document.getElementById("email").value,
+            name: document.getElementById("name").value,
+            phone: document.getElementById("phone").value || undefined,
+          },
+          // "if_required" returns the result to your code. Use "always" to
+          // navigate to afterCompletion.redirect.url instead.
+          redirect: "if_required",
+        });
+
+        if (result.type === "error") {
+          errorEl.textContent = result.error.message;
+          payButton.disabled = false;
+          payButton.textContent = original;
+          return;
+        }
+
+        window.location.href = `/success.html?session_id=${checkout.id}`;
+      });
+
+      start();
+    </script>
+  </body>
+</html>

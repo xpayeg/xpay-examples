@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hosted Checkout · XPay Vanilla Examples</title>
+    <link rel="stylesheet" href="/shared/styles.css" />
+  </head>
+  <body>
+    <header class="site">
+      <div class="inner">
+        <div class="brand">
+          <a href="/">XPay Vanilla Examples</a>
+          <span class="tag">hosted · redirect</span>
+        </div>
+        <nav>
+          <a href="/">All patterns</a>
+          <a href="https://docs.xpay.app/integrate/integration-patterns/hosted-checkout" target="_blank" rel="noreferrer">Docs</a>
+          <select class="theme-picker" id="theme-picker" aria-label="Theme">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <h1>Hosted Checkout — full redirect</h1>
+      <p class="lead">
+        No XPay JS on your page. Your server creates a session with <code>uiMode: "hosted"</code>;
+        the response carries a <code>url</code>; you navigate the customer there. After payment,
+        XPay redirects them back to your <code>afterCompletion.redirect.url</code>.
+      </p>
+
+      <div class="test-card-hint">
+        <strong>Test card:</strong> <code>5123 4500 0000 0008</code> &nbsp;·&nbsp; <code>01/39</code> &nbsp;·&nbsp; <code>100</code>
+      </div>
+
+      <div class="card">
+        <h3>Premium Plan</h3>
+        <p class="price">500.00 EGP</p>
+        <button id="buy">Continue to XPay</button>
+        <p class="error" id="error" style="margin-top:0.5rem"></p>
+      </div>
+
+      <p class="muted" style="margin-top:1rem">
+        Theme toggle here only styles this landing page. Once you're on the hosted checkout, it
+        follows that session's <code>brandingSettings</code> (and the customer's system preference).
+      </p>
+    </main>
+
+    <footer class="site">
+      Source: <a href="https://github.com/xpayeg/xpay-examples/blob/main/vanilla-html/public/hosted-redirect.html" target="_blank" rel="noreferrer">hosted-redirect.html</a>
+    </footer>
+
+    <script type="module">
+      import { mountThemePicker } from "/shared/theme.js";
+      mountThemePicker("#theme-picker");
+
+      const errorEl = document.getElementById("error");
+
+      document.getElementById("buy").addEventListener("click", async (event) => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        button.textContent = "Redirecting…";
+        errorEl.textContent = "";
+
+        try {
+          const res = await fetch("/api/create-checkout", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ productId: "premium", uiMode: "hosted" }),
+          });
+          if (!res.ok) throw new Error("Failed to create session");
+
+          // The hosted Checkout Session response includes `url` —
+          // navigate the browser there. The customer pays on XPay's
+          // page, then XPay redirects them back to your
+          // afterCompletion.redirect.url (set on the server).
+          const { url } = await res.json();
+          window.location.href = url;
+        } catch (err) {
+          console.error(err);
+          errorEl.textContent = err.message;
+          button.disabled = false;
+          button.textContent = "Continue to XPay";
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Drop-in Modal · XPay Vanilla Examples</title>
+    <link rel="stylesheet" href="/shared/styles.css" />
+    <!-- Preload the SDK runtime so the first checkout call doesn't wait. -->
+    <script src="https://checkout.xpay.app/v1/sdk.js" async></script>
+  </head>
+  <body>
+    <header class="site">
+      <div class="inner">
+        <div class="brand">
+          <a href="/">XPay Vanilla Examples</a>
+          <span class="tag">drop-in · modal</span>
+        </div>
+        <nav>
+          <a href="/">All patterns</a>
+          <a href="https://docs.xpay.app/integrate/integration-patterns/drop-in" target="_blank" rel="noreferrer">Docs</a>
+          <select class="theme-picker" id="theme-picker" aria-label="Theme">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <h1>Drop-in — modal</h1>
+      <p class="lead">
+        The shortest path from "Pay" button to a working checkout. The SDK opens
+        the full XPay payment UI in an overlay on top of your page.
+      </p>
+
+      <div class="test-card-hint">
+        <strong>Test card:</strong> <code>5123 4500 0000 0008</code> &nbsp;·&nbsp; <code>01/39</code> &nbsp;·&nbsp; <code>100</code>
+      </div>
+
+      <div class="card">
+        <h3>Premium Plan</h3>
+        <p class="price">500.00 EGP</p>
+        <button id="buy-premium">Pay 500 EGP</button>
+      </div>
+
+      <div class="card">
+        <h3>Basic Plan</h3>
+        <p class="price">100.00 EGP</p>
+        <button id="buy-basic">Pay 100 EGP</button>
+      </div>
+
+      <p class="error" id="error"></p>
+    </main>
+
+    <footer class="site">
+      Source: <a href="https://github.com/xpayeg/xpay-examples/blob/main/vanilla-html/public/drop-in-modal.html" target="_blank" rel="noreferrer">drop-in-modal.html</a>
+    </footer>
+
+    <script type="module">
+      import { mountThemePicker, getColorMode } from "/shared/theme.js";
+      import { PUBLISHABLE_KEY } from "/config.js";
+      mountThemePicker("#theme-picker");
+
+      const errorEl = document.getElementById("error");
+
+      function startCheckout(productId) {
+        return async (event) => {
+          const button = event.currentTarget;
+          const originalLabel = button.textContent;
+          button.disabled = true;
+          button.textContent = "Loading…";
+          errorEl.textContent = "";
+
+          try {
+            // 1. Ask YOUR server to create a Checkout Session.
+            //    The server returns the clientSecret your SDK needs.
+            const res = await fetch("/api/create-checkout", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ productId, uiMode: "embedded" }),
+            });
+            if (!res.ok) throw new Error("Failed to create session");
+            const { clientSecret } = await res.json();
+
+            // 2. Open the drop-in modal.
+            //    `XPay` is the global the SDK runtime puts on `window`.
+            const xpay = XPay(PUBLISHABLE_KEY);
+            const checkout = xpay.checkout({
+              clientSecret,
+              mode: "modal",
+              // Match the page's theme on first paint.
+              appearance: { colorMode: getColorMode() },
+              onReady: (session) => {
+                console.log("Session ready:", session.id);
+              },
+              onConfirmed: () => {
+                console.log("Customer hit Pay — processing");
+              },
+              onComplete: (result) => {
+                console.log("Payment succeeded:", result.paymentIntentId);
+                if (result.redirectUrl) {
+                  window.location.href = result.redirectUrl;
+                }
+              },
+              onClose: () => {
+                button.disabled = false;
+                button.textContent = originalLabel;
+              },
+              onError: (err) => {
+                errorEl.textContent = err.message;
+                button.disabled = false;
+                button.textContent = originalLabel;
+              },
+            });
+
+            // Note: the drop-in CheckoutInstance doesn't expose a runtime
+            // `changeAppearance()` — the iframe is configured once at
+            // `xpay.checkout(...)` time. If you want live theme sync
+            // mid-checkout, use the Elements pattern instead. Here, the
+            // next time the user opens the modal we'll pick up the
+            // current theme via `getColorMode()`.
+            checkout.open();
+          } catch (err) {
+            console.error(err);
+            errorEl.textContent = err.message;
+            button.disabled = false;
+            button.textContent = originalLabel;
+          }
+        };
+      }
+
+      document
+        .getElementById("buy-premium")
+        .addEventListener("click", startCheckout("premium"));
+      document
+        .getElementById("buy-basic")
+        .addEventListener("click", startCheckout("basic"));
+    </script>
+  </body>
+</html>
