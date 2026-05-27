@@ -65,7 +65,15 @@ export async function POST(request: Request) {
     return new NextResponse("invalid signature", { status: 400 });
   }
 
-  const event = result.event as { id: string; type: string; data?: { id?: string } };
+  // Event envelope shape: every XPay webhook has the resource nested under
+  // `data.object`. For checkout.session.* events the inner object is the
+  // CheckoutSession with `id`, `status`, etc.
+  const event = result.event as {
+    id: string;
+    type: string;
+    data?: { object?: { id?: string; [key: string]: unknown } };
+  };
+  const session = event.data?.object;
 
   // Retries can deliver the same event more than once — dedup on `event.id`
   // before doing real work. See the Idempotency section of the guide above.
@@ -73,17 +81,17 @@ export async function POST(request: Request) {
   switch (event.type) {
     case "checkout.session.completed":
       // Payment confirmed — fulfill the order here.
-      // e.g. await markOrderPaid(event.data.id) and send the receipt email.
-      console.log("[webhook] checkout.session.completed:", event.data?.id);
+      // e.g. await markOrderPaid(session.id) and send the receipt email.
+      console.log("[webhook] checkout.session.completed:", session?.id);
       break;
 
     case "checkout.session.expired":
       // Customer didn't pay in time — release any held stock.
-      console.log("[webhook] checkout.session.expired:", event.data?.id);
+      console.log("[webhook] checkout.session.expired:", session?.id);
       break;
 
     default:
-      console.log("[webhook] unhandled event type:", event.type, event.data);
+      console.log("[webhook] unhandled event type:", event.type, session);
   }
 
   return new NextResponse(null, { status: 200 });
