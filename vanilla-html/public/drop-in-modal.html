@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Drop-in Modal · XPay Vanilla Examples</title>
     <link rel="stylesheet" href="/shared/styles.css" />
-    <!-- Preload the SDK runtime so the first checkout call doesn't wait. -->
-    <script src="https://checkout.xpay.app/v1/sdk.js" async></script>
+    <!-- Load the SDK runtime synchronously so `window.XPay` is ready before any
+         page script runs; no readiness check needed (Stripe-style include). -->
+    <script src="https://checkout.xpay.app/v1/sdk.js"></script>
   </head>
   <body>
     <header class="site">

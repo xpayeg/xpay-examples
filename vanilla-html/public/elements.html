@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Elements (PaymentElement) · XPay Vanilla Examples</title>
     <link rel="stylesheet" href="/shared/styles.css" />
-    <script src="https://checkout.xpay.app/v1/sdk.js" async></script>
+    <!-- Synchronous include: `window.XPay` is ready before any page script runs. -->
+    <script src="https://checkout.xpay.app/v1/sdk.js"></script>
   </head>
   <body>
     <header class="site">
@@ -116,14 +117,6 @@
       // ── Helpers ────────────────────────────────────────────────────────
       const fmt = (currency, minor) =>
         `${currency} ${(Number(minor) / 100).toFixed(2)}`;
-
-      const whenSdkReady = () =>
-        new Promise((resolve) => {
-          if (window.XPay) return resolve();
-          const i = setInterval(() => {
-            if (window.XPay) { clearInterval(i); resolve(); }
-          }, 50);
-        });
 
       // ── Render the order summary from the session ─────────────────────
       //
@@ -246,8 +239,6 @@
       }
 
       async function start() {
-        await whenSdkReady();
-
         // 1. Server creates a Checkout Session in `custom` uiMode.
         const res = await fetch("/api/create-checkout", {
           method: "POST",

@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Drop-in Inline · XPay Vanilla Examples</title>
     <link rel="stylesheet" href="/shared/styles.css" />
-    <script src="https://checkout.xpay.app/v1/sdk.js" async></script>
+    <!-- Synchronous include: `window.XPay` is ready before any page script runs. -->
+    <script src="https://checkout.xpay.app/v1/sdk.js"></script>
   </head>
   <body>
     <header class="site">
@@ -56,25 +57,9 @@
 
       const errorEl = document.getElementById("error");
 
-      // Wait for the SDK to be ready (the async <script> tag in <head> may not have
-      // loaded by the time this module runs).
-      function whenSdkReady() {
-        return new Promise((resolve) => {
-          if (window.XPay) return resolve();
-          const i = setInterval(() => {
-            if (window.XPay) {
-              clearInterval(i);
-              resolve();
-            }
-          }, 50);
-        });
-      }
-
       let activeCheckout = null;
 
       async function mount() {
-        await whenSdkReady();
-
         try {
           const res = await fetch("/api/create-checkout", {
             method: "POST",
