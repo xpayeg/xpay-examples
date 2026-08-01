@@ -18,11 +18,11 @@ importers:
         specifier: ^5.71.10
         version: 5.100.14(react@19.2.6)
       '@xpayeg/react':
-        specifier: ^1.0.1
-        version: 1.0.1(@xpayeg/sdk@1.0.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        specifier: ^2.0.0
+        version: 2.0.0(@xpayeg/sdk@2.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@xpayeg/sdk':
-        specifier: ^1.0.1
-        version: 1.0.1
+        specifier: ^2.0.0
+        version: 2.0.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -458,16 +458,16 @@ packages:
   '@types/react@19.2.7':
     resolution: {integrity: sha512-MWtvHrGZLFttgeEj28VXHxpmwYbor/ATPYbBfSFZEIRK0ecCFLl2Qo55z52Hss+UV9CRN7trSeq1zbgx7YDWWg==}
 
-  '@xpayeg/react@1.0.1':
-    resolution: {integrity: sha512-KKxNeZLalLhOdDJN2aWlc43Ac13ebnm+p1eljx6NmvQaytwaHU0do7zbhSODdE64ZHLOXU9Iv5vVaaQ+caHAYQ==}
+  '@xpayeg/react@2.0.0':
+    resolution: {integrity: sha512-w7Gfxqx9lPA2KuDqiHbzjMCOQ066rK66s4mir3Z7lMWXuMjZ5nl/DmfHFFjZetPf1v/OLo4KRZw9Jyc7ALcX+w==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@xpayeg/sdk': 1.0.1
+      '@xpayeg/sdk': 2.0.0
       react: ^18 || ^19
       react-dom: ^18 || ^19
 
-  '@xpayeg/sdk@1.0.1':
-    resolution: {integrity: sha512-UKFR5fJoJFhrvQ0hWYkCPHdBgJccJXnuGCWA0W9leZ9tNCmp2pSgAgP1AYRVesBxuibWkmzd4Cx+0Gh4s7+pZw==}
+  '@xpayeg/sdk@2.0.0':
+    resolution: {integrity: sha512-FcXHqbg4/zJAjhDsMRzNMmTIhSZMVooMI0wZXXeo303MCmx/tlDs2zhEIUzerEvi6NiLzgNqxAk0B0R+PszqOw==}
     engines: {node: '>=18'}
 
   baseline-browser-mapping@2.10.32:
@@ -964,13 +964,13 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
-  '@xpayeg/react@1.0.1(@xpayeg/sdk@1.0.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
+  '@xpayeg/react@2.0.0(@xpayeg/sdk@2.0.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
     dependencies:
-      '@xpayeg/sdk': 1.0.1
+      '@xpayeg/sdk': 2.0.0
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
 
-  '@xpayeg/sdk@1.0.1': {}
+  '@xpayeg/sdk@2.0.0': {}
 
   baseline-browser-mapping@2.10.32: {}
 
