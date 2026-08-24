@@ -4,9 +4,13 @@ import { NextResponse } from "next/server";
 /**
  * XPay webhook receiver — confirms payments and triggers fulfillment.
  *
- * `checkout.session.completed` is the signal that the customer paid. Don't
- * rely on the success page for this — the customer can close their tab the
- * moment their card is charged and never load it.
+ * Fulfil when the session's `paymentStatus` is "paid", never on an event name
+ * alone. Cards pay inside checkout, so `checkout.session.completed` arrives
+ * already paid. Methods the customer pays afterwards (Fawry) complete the
+ * session as "unpaid" and the money is announced later by
+ * `checkout.session.async_payment_succeeded` (or never, by
+ * `checkout.session.async_payment_failed`). Don't rely on the success page
+ * either way — the customer can close their tab and never load it.
  *
  * Every delivery is signed. Always verify before trusting the payload,
  * otherwise anyone who knows your URL can forge a "paid" event.
@@ -71,7 +75,7 @@ export async function POST(request: Request) {
   const event = result.event as {
     id: string;
     type: string;
-    data?: { object?: { id?: string; [key: string]: unknown } };
+    data?: { object?: { id?: string; paymentStatus?: string; [key: string]: unknown } };
   };
   const session = event.data?.object;
 
@@ -80,9 +84,27 @@ export async function POST(request: Request) {
 
   switch (event.type) {
     case "checkout.session.completed":
-      // Payment confirmed — fulfill the order here.
-      // e.g. await markOrderPaid(session.id) and send the receipt email.
-      console.log("[webhook] checkout.session.completed:", session?.id);
+    case "checkout.session.async_payment_succeeded":
+      // ONE fulfilment path for both events, gated on paymentStatus. A card
+      // payment arrives as `completed` with "paid". A Fawry payment arrives
+      // as `completed` with "unpaid" (record the order as awaiting payment,
+      // ship nothing yet) and again as `async_payment_succeeded` with "paid"
+      // once the customer pays the reference.
+      if (session?.paymentStatus === "paid") {
+        // Payment confirmed — fulfill the order here. Make it safe to run
+        // twice for the same session: deliveries are retried.
+        // e.g. await markOrderPaid(session.id) and send the receipt email.
+        console.log("[webhook] paid:", event.type, session?.id);
+      } else {
+        // Awaiting an out-of-band payment (a Fawry reference). Do not fulfil.
+        console.log("[webhook] awaiting payment:", session?.id);
+      }
+      break;
+
+    case "checkout.session.async_payment_failed":
+      // The reference expired unpaid or the payment was declined at the
+      // kiosk. The money is not coming — close the order.
+      console.log("[webhook] async payment failed:", session?.id);
       break;
 
     case "checkout.session.expired":

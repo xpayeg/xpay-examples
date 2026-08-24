@@ -71,10 +71,10 @@
           .then((r) => (r.ok ? r.json() : Promise.reject(new Error("Lookup failed"))))
           .then((session) => {
             const paid = session.paymentStatus === "paid";
-            titleEl.textContent = paid ? "Payment complete" : "Payment pending";
+            titleEl.textContent = paid ? "Payment complete" : "Awaiting payment";
             subtitleEl.textContent = paid
               ? "Thanks — your order has been confirmed."
-              : "We're still finalizing this payment. The webhook will be the source of truth.";
+              : "Complete your payment with the reference you received. The checkout.session webhooks with paymentStatus \"paid\" are the source of truth.";
 
             const row = (label, value) => {
               const dt = document.createElement("dt");

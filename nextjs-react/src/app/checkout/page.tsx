@@ -167,7 +167,12 @@ function CheckoutForm({ checkout }: { checkout: Checkout }) {
       return;
     }
 
-    router.push(`/success?session_id=${checkout.id}`);
+    // "success" means the customer finished checkout, not that the money is
+    // in: a Fawry payment resolves with `result.session.status.paymentStatus`
+    // "unpaid" and is paid afterwards at a kiosk. The success page reads the
+    // session server-side and branches on paymentStatus, so it shows
+    // "awaiting payment" for those instead of a receipt.
+        router.push(`/success?session_id=${checkout.id}`);
   };
 
   const handleApplyPromo = async (code: string) => {

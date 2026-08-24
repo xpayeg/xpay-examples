@@ -99,7 +99,10 @@
                 console.log("Customer hit Pay — processing");
               },
               onComplete: (result) => {
-                console.log("Payment succeeded:", result.paymentIntentId);
+                // paymentStatus is "paid" for cards, "unpaid" for methods the
+                // customer pays afterwards (a Fawry reference). Fulfil on the
+                // checkout.session webhooks with paymentStatus "paid".
+                console.log("Checkout complete:", result.paymentIntentId, result.paymentStatus);
                 if (result.redirectUrl) {
                   window.location.href = result.redirectUrl;
                 }

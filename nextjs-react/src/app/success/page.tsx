@@ -135,10 +135,12 @@ function SuccessContent() {
           {isPaid ? <CheckCircle2 className="h-8 w-8" /> : <Clock className="h-8 w-8" />}
         </div>
         <h1 className="mb-2 text-2xl font-medium tracking-tight">
-          {isPaid ? "Payment Confirmed" : "Payment Processing"}
+          {isPaid ? "Payment Confirmed" : "Awaiting Payment"}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {isPaid ? "Thank you for your purchase!" : "Your payment is being processed."}
+          {isPaid
+            ? "Thank you for your purchase!"
+            : "Complete your payment with the reference you received. Your order is confirmed automatically once it is paid."}
         </p>
       </div>
 

@@ -17,7 +17,10 @@ export default function DonatePage() {
   const [mode, setMode] = useState<CheckoutMode>("modal");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [donated, setDonated] = useState(false);
+  // "paid" the moment the money is in; "awaiting" when the customer holds a
+  // reference they pay afterwards (Fawry) — the checkout is over but nothing
+  // is charged yet, so don't thank them for a donation that hasn't happened.
+  const [donated, setDonated] = useState<"paid" | "awaiting" | null>(null);
   const { resolvedTheme } = useTheme();
 
   const inlineContainerRef = useRef<HTMLDivElement | null>(null);
@@ -76,12 +79,13 @@ export default function DonatePage() {
           mode: "inline",
           container,
           appearance: { colorMode },
-          onComplete: () => setDonated(true),
+          onComplete: (result) =>
+            setDonated(result.paymentStatus === "paid" ? "paid" : "awaiting"),
           onError: (err) => {
             console.error("Checkout error", err);
             setError(err.message);
           },
-          onClose: () => setDonated(false),
+          onClose: () => {},
           onReady: (session) => {
             console.log("Session ready", session);
           },
@@ -94,12 +98,13 @@ export default function DonatePage() {
           clientSecret: data.clientSecret,
           mode: "modal",
           appearance: { colorMode },
-          onComplete: () => setDonated(true),
+          onComplete: (result) =>
+            setDonated(result.paymentStatus === "paid" ? "paid" : "awaiting"),
           onError: (err) => {
             console.error("Checkout error", err);
             setError(err.message);
           },
-          onClose: () => setDonated(false),
+          onClose: () => {},
           onReady: (session) => {
             console.log("Session ready", session);
           },
@@ -118,24 +123,35 @@ export default function DonatePage() {
   };
 
   if (donated) {
+    const awaiting = donated === "awaiting";
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-4 py-20 text-center">
         <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
           <CheckCircle2 className="h-8 w-8" />
         </div>
-        <h1 className="mb-3 text-2xl font-medium tracking-tight">Thank you!</h1>
+        <h1 className="mb-3 text-2xl font-medium tracking-tight">
+          {awaiting ? "Almost there!" : "Thank you!"}
+        </h1>
         <p className="mb-8 text-sm text-muted-foreground">
-          Your donation of{" "}
-          <span className="font-medium text-foreground">
-            EGP {(amount / 100).toFixed(2)}
-          </span>{" "}
-          has been received.
+          {awaiting ? (
+            <>
+              Pay your reference at any Fawry outlet and your donation of{" "}
+              <span className="font-medium text-foreground">EGP {(amount / 100).toFixed(2)}</span>{" "}
+              will be confirmed automatically.
+            </>
+          ) : (
+            <>
+              Your donation of{" "}
+              <span className="font-medium text-foreground">EGP {(amount / 100).toFixed(2)}</span>{" "}
+              has been received.
+            </>
+          )}
         </p>
         <Button
           className="rounded-md text-sm font-medium"
           onClick={() => {
             teardownCheckout();
-            setDonated(false);
+            setDonated(null);
           }}
         >
           Donate Again
