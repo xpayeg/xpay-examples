@@ -102,7 +102,9 @@ function SuccessContent() {
         <p className="mb-6 text-sm text-muted-foreground">
           {error || "Session not found"}
         </p>
-        <Button asChild className="rounded-md text-sm"><Link href="/">Back to Store</Link></Button>
+        <Button asChild className="rounded-md text-sm">
+          <Link href="/">Back to Store</Link>
+        </Button>
       </div>
     );
   }
@@ -129,10 +131,16 @@ function SuccessContent() {
       <div className="mb-10 text-center">
         <div
           className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
-            isPaid ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+            isPaid
+              ? "bg-primary/10 text-primary"
+              : "bg-muted text-muted-foreground"
           }`}
         >
-          {isPaid ? <CheckCircle2 className="h-8 w-8" /> : <Clock className="h-8 w-8" />}
+          {isPaid ? (
+            <CheckCircle2 className="h-8 w-8" />
+          ) : (
+            <Clock className="h-8 w-8" />
+          )}
         </div>
         <h1 className="mb-2 text-2xl font-medium tracking-tight">
           {isPaid ? "Payment Confirmed" : "Awaiting Payment"}
@@ -155,12 +163,14 @@ function SuccessContent() {
             <p className="font-mono text-xs font-medium">{session.id}</p>
           </div>
           <div className="text-right">
-            {date && <p className="mb-1.5 text-xs text-muted-foreground">{date}</p>}
+            {date && (
+              <p className="mb-1.5 text-xs text-muted-foreground">{date}</p>
+            )}
             <Badge
               variant={isPaid ? "default" : "secondary"}
               className="rounded px-2 text-xs font-medium"
             >
-              {isPaid ? "Paid" : "Processing"}
+              {isPaid ? "Paid" : "Awaiting Payment"}
             </Badge>
           </div>
         </div>
@@ -170,11 +180,15 @@ function SuccessContent() {
           <div className="border-b border-border/50 px-6 py-4">
             <div className="space-y-3">
               {session.lineItems.map((item) => {
-                const itemName = item.price?.product?.name ?? item.description ?? "Item";
+                const itemName =
+                  item.price?.product?.name ?? item.description ?? "Item";
                 const unitPrice = item.price?.unitAmount ?? 0;
 
                 return (
-                  <div key={item.id} className="flex items-center justify-between">
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between"
+                  >
                     <div>
                       <p className="text-sm font-medium">{itemName}</p>
                       <p className="text-xs text-muted-foreground">
@@ -182,7 +196,10 @@ function SuccessContent() {
                       </p>
                     </div>
                     <p className="text-sm font-medium">
-                      {fmt(item.amountTotal ?? unitPrice * item.quantity, session.currency)}
+                      {fmt(
+                        item.amountTotal ?? unitPrice * item.quantity,
+                        session.currency,
+                      )}
                     </p>
                   </div>
                 );
@@ -204,7 +221,10 @@ function SuccessContent() {
 
         {/* Breakdown */}
         <div className="space-y-2 px-6 py-4">
-          <Row label="Subtotal" value={fmt(session.amountSubtotal, session.currency)} />
+          <Row
+            label="Subtotal"
+            value={fmt(session.amountSubtotal, session.currency)}
+          />
           {discount > 0 && (
             <Row
               label="Discount"
@@ -212,11 +232,26 @@ function SuccessContent() {
               className="font-medium text-success"
             />
           )}
-          {shipping > 0 && <Row label="Shipping" value={fmt(td?.amountShipping, session.currency)} />}
-          {tax > 0 && <Row label="Tax" value={fmt(td?.amountTax, session.currency)} />}
-          {vat > 0 && <Row label="VAT" value={fmt(td?.amountCollectedVat, session.currency)} />}
+          {shipping > 0 && (
+            <Row
+              label="Shipping"
+              value={fmt(td?.amountShipping, session.currency)}
+            />
+          )}
+          {tax > 0 && (
+            <Row label="Tax" value={fmt(td?.amountTax, session.currency)} />
+          )}
+          {vat > 0 && (
+            <Row
+              label="VAT"
+              value={fmt(td?.amountCollectedVat, session.currency)}
+            />
+          )}
           {platformFee > 0 && (
-            <Row label="Processing Fee" value={fmt(td?.amountPlatformFee, session.currency)} />
+            <Row
+              label="Processing Fee"
+              value={fmt(td?.amountPlatformFee, session.currency)}
+            />
           )}
 
           <div className="my-3 h-px w-full bg-border/50" />
@@ -233,7 +268,9 @@ function SuccessContent() {
 
         {/* Customer */}
         {session.customer &&
-          (session.customer.email || session.customer.name || session.customer.phone) && (
+          (session.customer.email ||
+            session.customer.name ||
+            session.customer.phone) && (
             <div className="border-t border-border/50 bg-muted/20 px-6 py-4">
               <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                 Customer
@@ -243,10 +280,14 @@ function SuccessContent() {
                   <p className="text-sm font-medium">{session.customer.name}</p>
                 )}
                 {session.customer.email && (
-                  <p className="text-xs text-muted-foreground">{session.customer.email}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {session.customer.email}
+                  </p>
                 )}
                 {session.customer.phone && (
-                  <p className="text-xs text-muted-foreground">{session.customer.phone}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {session.customer.phone}
+                  </p>
                 )}
               </div>
             </div>
@@ -260,15 +301,29 @@ function SuccessContent() {
             </p>
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-9 items-center justify-center rounded border border-border/50 bg-background">
-                <svg className="h-3.5 w-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                <svg
+                  className="h-3.5 w-3.5 text-muted-foreground"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  />
                 </svg>
               </div>
               <p className="text-sm font-medium">
-                {session.cardBrand && <span className="capitalize">{session.cardBrand} </span>}
+                {session.cardBrand && (
+                  <span className="capitalize">{session.cardBrand} </span>
+                )}
                 {session.cardLast4 && <span>•••• {session.cardLast4}</span>}
                 {!session.cardLast4 && session.paymentMethodType && (
-                  <span className="capitalize">{session.paymentMethodType}</span>
+                  <span className="capitalize">
+                    {session.paymentMethodType}
+                  </span>
                 )}
               </p>
             </div>
@@ -285,7 +340,11 @@ function SuccessContent() {
 
       {/* CTA */}
       <div className="mt-8 flex justify-center">
-        <Button asChild className="h-10 rounded-md px-6 text-sm font-medium"><Link href="/">Continue Shopping <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link></Button>
+        <Button asChild className="h-10 rounded-md px-6 text-sm font-medium">
+          <Link href="/">
+            Continue Shopping <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+          </Link>
+        </Button>
       </div>
     </div>
   );
@@ -304,7 +363,9 @@ function Row({
   return (
     <div className="flex justify-between text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className={className || "font-medium text-foreground"}>{value}</span>
+      <span className={className || "font-medium text-foreground"}>
+        {value}
+      </span>
     </div>
   );
 }

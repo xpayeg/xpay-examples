@@ -63,7 +63,8 @@ export default function DonatePage() {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Failed to create session");
+      if (!response.ok)
+        throw new Error(data.error ?? "Failed to create session");
 
       const xpay = await xpayPromise;
       if (!xpay) throw new Error("XPay SDK not loaded");
@@ -79,8 +80,12 @@ export default function DonatePage() {
           mode: "inline",
           container,
           appearance: { colorMode },
-          onComplete: (result) =>
-            setDonated(result.paymentStatus === "paid" ? "paid" : "awaiting"),
+          onComplete: (result) => {
+            // The checkout is finished; release the instance (iframe +
+            // listeners) before this view is replaced by the thank-you state.
+            teardownCheckout();
+            setDonated(result.paymentStatus === "paid" ? "paid" : "awaiting");
+          },
           onError: (err) => {
             console.error("Checkout error", err);
             setError(err.message);
@@ -98,8 +103,12 @@ export default function DonatePage() {
           clientSecret: data.clientSecret,
           mode: "modal",
           appearance: { colorMode },
-          onComplete: (result) =>
-            setDonated(result.paymentStatus === "paid" ? "paid" : "awaiting"),
+          onComplete: (result) => {
+            // The checkout is finished; release the instance (iframe +
+            // listeners) before this view is replaced by the thank-you state.
+            teardownCheckout();
+            setDonated(result.paymentStatus === "paid" ? "paid" : "awaiting");
+          },
           onError: (err) => {
             console.error("Checkout error", err);
             setError(err.message);
@@ -136,13 +145,17 @@ export default function DonatePage() {
           {awaiting ? (
             <>
               Pay your reference at any Fawry outlet and your donation of{" "}
-              <span className="font-medium text-foreground">EGP {(amount / 100).toFixed(2)}</span>{" "}
+              <span className="font-medium text-foreground">
+                EGP {(amount / 100).toFixed(2)}
+              </span>{" "}
               will be confirmed automatically.
             </>
           ) : (
             <>
               Your donation of{" "}
-              <span className="font-medium text-foreground">EGP {(amount / 100).toFixed(2)}</span>{" "}
+              <span className="font-medium text-foreground">
+                EGP {(amount / 100).toFixed(2)}
+              </span>{" "}
               has been received.
             </>
           )}
@@ -150,7 +163,6 @@ export default function DonatePage() {
         <Button
           className="rounded-md text-sm font-medium"
           onClick={() => {
-            teardownCheckout();
             setDonated(null);
           }}
         >
@@ -231,9 +243,24 @@ export default function DonatePage() {
             disabled={loading}
           >
             {loading && (
-              <svg className="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              <svg
+                className="mr-2 h-4 w-4 animate-spin"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
               </svg>
             )}
             Donate

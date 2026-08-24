@@ -113,7 +113,7 @@ export async function POST(request: Request) {
       break;
 
     default:
-      console.log("[webhook] unhandled event type:", event.type, session);
+      console.log("[webhook] unhandled event type:", event.type, session?.id);
   }
 
   return new NextResponse(null, { status: 200 });
