@@ -21,6 +21,10 @@ export default function DonatePage() {
   // reference they pay afterwards (Fawry) — the checkout is over but nothing
   // is charged yet, so don't thank them for a donation that hasn't happened.
   const [donated, setDonated] = useState<"paid" | "awaiting" | null>(null);
+  // The amount the open session was created with. The completion views read
+  // this, not `amount`: in inline mode the presets stay clickable while the
+  // checkout is mounted, so `amount` can drift from what was actually paid.
+  const [sessionAmount, setSessionAmount] = useState(5000);
   const { resolvedTheme } = useTheme();
 
   const inlineContainerRef = useRef<HTMLDivElement | null>(null);
@@ -51,6 +55,7 @@ export default function DonatePage() {
     setLoading(true);
     setError("");
     teardownCheckout();
+    setSessionAmount(amount);
 
     try {
       const response = await fetch("/api/create-checkout", {
@@ -146,7 +151,7 @@ export default function DonatePage() {
             <>
               Pay your reference at any Fawry outlet and your donation of{" "}
               <span className="font-medium text-foreground">
-                EGP {(amount / 100).toFixed(2)}
+                EGP {(sessionAmount / 100).toFixed(2)}
               </span>{" "}
               will be confirmed automatically.
             </>
@@ -154,7 +159,7 @@ export default function DonatePage() {
             <>
               Your donation of{" "}
               <span className="font-medium text-foreground">
-                EGP {(amount / 100).toFixed(2)}
+                EGP {(sessionAmount / 100).toFixed(2)}
               </span>{" "}
               has been received.
             </>
