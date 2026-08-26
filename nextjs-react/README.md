@@ -13,6 +13,7 @@ A working Next.js demo showing every XPay SDK integration pattern: hosted checko
 | `/checkout?ui=embedded` | XPay drop-in modal opened via `xpay.checkout()` |
 | `/checkout?ui=custom` | Fully custom UI using `<XPayProvider>` + `<PaymentElement>` |
 | `/donate` | Drop-in modal with dynamic amounts |
+| `/checkout/deferred` | Deferred Elements: the payment form renders with no session; the session is created at pay time with the final total |
 | `/success` | Server-side session retrieval + receipt |
 | `/api/webhooks` | Signature-verified webhook receiver |
 

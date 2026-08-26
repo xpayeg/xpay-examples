@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/", label: "Collection" },
   { href: "/donate", label: "Donate" },
   { href: "/checkout/redirect", label: "Hosted Checkout" },
+  { href: "/checkout/deferred", label: "Deferred" },
 ];
 
 export function Nav() {
