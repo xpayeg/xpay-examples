@@ -34,8 +34,9 @@ import { xpayPromise } from "@/components/xpay-loader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { generateRandomAppearance } from "@/lib/random-appearance";
 import { products } from "@/lib/products";
-import { Lock, Minus, Plus } from "lucide-react";
+import { Dices, LayoutGrid, Lock, Minus, Plus, Rows3 } from "lucide-react";
 
 const CURRENCY = "EGP";
 
@@ -110,6 +111,23 @@ function DeferredCheckoutForm({
   const [paymentReady, setPaymentReady] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
+  // Payment Element layout: "tabs" renders the methods as a wrapping tile
+  // grid, "accordion" (the default) as a vertical list. The toggle below
+  // shows that layout can change after the element is mounted.
+  const [layout, setLayout] = useState<"tabs" | "accordion">("tabs");
+
+  // A randomized palette pins explicit color hexes, and `changeAppearance`
+  // MERGES rather than replaces, so flipping only `colorMode` afterwards
+  // would leave the old theme's hexes in place. A ref, not state: the theme
+  // effect below must react to the theme changing, never to this flipping
+  // (that would re-randomize the palette we just applied).
+  const randomizedRef = useRef(false);
+
+  const handleRandomize = () => {
+    const appearance = generateRandomAppearance(resolvedTheme === "dark");
+    randomizedRef.current = true;
+    elements?.changeAppearance(appearance);
+  };
 
   /**
    * The one session this checkout owns, plus the amount it is priced at.
@@ -121,11 +139,16 @@ function DeferredCheckoutForm({
     null,
   );
 
-  // Keep the element's theme in sync with the site's theme toggle.
+  // Keep the element's theme in sync with the site's theme toggle. With a
+  // randomized palette active, regenerate it for the new theme: sending
+  // `colorMode` alone would keep the old theme's hexes (see randomizedRef).
   useEffect(() => {
-    elements?.changeAppearance({
-      colorMode: resolvedTheme === "dark" ? "dark" : "light",
-    });
+    const isDark = resolvedTheme === "dark";
+    elements?.changeAppearance(
+      randomizedRef.current
+        ? generateRandomAppearance(isDark)
+        : { colorMode: isDark ? "dark" : "light" },
+    );
   }, [resolvedTheme, elements]);
 
   const setQuantity = (productId: string, quantity: number) => {
@@ -300,6 +323,7 @@ function DeferredCheckoutForm({
       {/* The one piece you don't build */}
       <div className="mb-6">
         <PaymentElement
+          options={{ layout }}
           onChange={(event) => setPaymentReady(event.complete)}
           onLoadError={(err) => setError(err.message)}
         />
@@ -324,6 +348,28 @@ function DeferredCheckoutForm({
         No session exists until you click Pay. You are charged exactly the amount on the button, or
         nothing.
       </p>
+
+      {/* Demo controls: both call into the mounted element at runtime. */}
+      <div className="fixed bottom-16 right-6 z-50 flex flex-col items-end gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setLayout(layout === "tabs" ? "accordion" : "tabs")}
+          className="gap-1.5 rounded-full text-xs text-muted-foreground shadow-lg"
+        >
+          {layout === "tabs" ? <LayoutGrid className="size-3.5" /> : <Rows3 className="size-3.5" />}
+          Layout: {layout === "tabs" ? "Tabs" : "Accordion"}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRandomize}
+          className="gap-1.5 rounded-full text-xs text-muted-foreground shadow-lg"
+        >
+          <Dices className="size-3.5" />
+          Randomize Appearance
+        </Button>
+      </div>
     </div>
   );
 }

@@ -18,11 +18,11 @@ importers:
         specifier: ^5.71.10
         version: 5.100.14(react@19.2.6)
       '@xpayeg/react':
-        specifier: ^2.2.0
-        version: 2.2.0(@xpayeg/sdk@2.2.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        specifier: ^2.4.0
+        version: 2.4.0(@xpayeg/sdk@2.4.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@xpayeg/sdk':
-        specifier: ^2.2.0
-        version: 2.2.0
+        specifier: ^2.4.0
+        version: 2.4.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -458,16 +458,16 @@ packages:
   '@types/react@19.2.7':
     resolution: {integrity: sha512-MWtvHrGZLFttgeEj28VXHxpmwYbor/ATPYbBfSFZEIRK0ecCFLl2Qo55z52Hss+UV9CRN7trSeq1zbgx7YDWWg==}
 
-  '@xpayeg/react@2.2.0':
-    resolution: {integrity: sha512-4IyTfOxGcToLSXu2SSe93M5sR7j1tTA+NGThMmMlOygYFByxJedcthb5gx/gLL3SDDdrN7pU65liDzr01aCzBA==}
+  '@xpayeg/react@2.4.0':
+    resolution: {integrity: sha512-2nmrTzx+DchsAZzNbfgDKXP3FS+6R8AVp50lbrl6XItLHmjtlUP8/9WcZs/UUJ2OviWjuCZqwOWAj3kMJeJ50A==}
     engines: {node: '>=18'}
     peerDependencies:
       '@xpayeg/sdk': ^2.0.0
       react: ^18 || ^19
       react-dom: ^18 || ^19
 
-  '@xpayeg/sdk@2.2.0':
-    resolution: {integrity: sha512-GEdw46acmMdOkv1bv9h+Qz6z+P21ONQtBRhN5z5R4vYuIWeBuhiCIkHndAXVn9tZZii/UpYEMDgla0spILh8Hg==}
+  '@xpayeg/sdk@2.4.0':
+    resolution: {integrity: sha512-VvdU9pxdH0cOq4j/4WKzR2JssmXf51PWd/FmkCIV8lzrB5doC+YlZcdaxvnTT9A6bTPicu/+Ye7pnQ4Os4AQhA==}
     engines: {node: '>=18'}
 
   baseline-browser-mapping@2.10.32:
@@ -964,13 +964,13 @@ snapshots:
     dependencies:
       csstype: 3.2.3
 
-  '@xpayeg/react@2.2.0(@xpayeg/sdk@2.2.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
+  '@xpayeg/react@2.4.0(@xpayeg/sdk@2.4.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
     dependencies:
-      '@xpayeg/sdk': 2.2.0
+      '@xpayeg/sdk': 2.4.0
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
 
-  '@xpayeg/sdk@2.2.0': {}
+  '@xpayeg/sdk@2.4.0': {}
 
   baseline-browser-mapping@2.10.32: {}
 

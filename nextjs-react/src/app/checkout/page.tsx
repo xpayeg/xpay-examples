@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import { XPayProvider, useCheckout, PaymentElement, type Checkout } from "@xpayeg/react";
@@ -108,15 +108,27 @@ function CheckoutForm({ checkout }: { checkout: Checkout }) {
   const [email, setEmail] = useState("customer@example.com");
   const [name, setName] = useState("Ahmed Hassan");
   const [paymentReady, setPaymentReady] = useState(false);
-  // Sync dark mode with XPay appearance
+  // A randomized palette pins explicit color hexes, and `changeAppearance`
+  // MERGES rather than replaces, so flipping only `colorMode` afterwards
+  // would leave the old theme's hexes in place. A ref, not state: the theme
+  // effect below must react to the theme changing, never to this flipping
+  // (that would re-randomize the palette we just applied).
+  const randomizedRef = useRef(false);
+
+  // Sync dark mode with XPay appearance. With a randomized palette active,
+  // regenerate it for the new theme instead of sending `colorMode` alone.
   useEffect(() => {
-    checkout.changeAppearance({
-      colorMode: resolvedTheme === "dark" ? "dark" : "light",
-    });
+    const isDark = resolvedTheme === "dark";
+    checkout.changeAppearance(
+      randomizedRef.current
+        ? generateRandomAppearance(isDark)
+        : { colorMode: isDark ? "dark" : "light" },
+    );
   }, [resolvedTheme, checkout]);
 
   const handleRandomize = () => {
     const appearance = generateRandomAppearance(resolvedTheme === "dark");
+    randomizedRef.current = true;
     checkout.changeAppearance(appearance);
     console.log("[XPay SDK] Random appearance:", appearance);
   };
